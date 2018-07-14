@@ -89,5 +89,6 @@ function launch_ec2_host() {
     --security-group-ids "${newSecurityGroupId}" \
     --user-data "${userData}" \
     --region "${region}" \
+    --instance-initiated-shutdown-behavior terminate \
     --subnet-id "${subnetId}"
 }
