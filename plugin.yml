@@ -1,0 +1,11 @@
+name: win-docker
+description: Provides a way for working with Windows Docker containers from a Linux Host. Designed to work with the Elastic CI stack
+author: https://github.com/zsims
+requirements: []
+configuration:
+  properties:
+    host:
+      aws_instance_type:
+        type: string
+  required:
+    - host

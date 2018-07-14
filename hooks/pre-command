@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# AMI for Windows Server 2016 Containers: https://aws.amazon.com/marketplace/pp/B06XX3NFQF
+# TODO: Search for this automatically
+AP_SOUTHEAST2_AMI='ami-a4f22dc6'
+
+HOST_INSTANCE_TYPE="${BUILDKITE_PLUGIN_WIN_DOCKER_HOST_AWS_INSTANCE_TYPE:-t2.medium}"
+
+function get_local_ipv4() {
+  curl 'curl http://169.254.169.254/latest/meta-data/local-ipv4'
+}
+
+function get_mac_address() {
+  curl 'curl http://169.254.169.254/latest/meta-data/mac'
+}
+
+function get_current_subnet_id() {
+  local macAddress=$(get_mac_address)
+  curl "http://169.254.169.254/latest/meta-data/network/interfaces/macs/${macAddress}/subnet-id"
+}
+
+function get_vpc_id() {
+  local macAddress=$(get_mac_address)
+  curl "http://169.254.169.254/latest/meta-data/network/interfaces/macs/${macAddress}/vpc-id"
+}
+
+function create_security_group() {
+  local vpcId="$0"
+  local currentIp="$1"
+  local groupId=(aws ec2 create-security-group \
+    --group-name "TODO" \
+    --description 'Created by Win Docker Buildkite Plugin' \
+    --vpc-id "${vpcId}" \
+    --output text \
+    --query 'GroupId')
+
+  # allow docker 2375 on TCP
+  aws ec2 authorize-security-group-ingress \
+    --group-id "${groupId}" \
+    --protocol tcp \
+    --port 2375 \
+    --cidr "$currentIp/32" > /dev/null
+
+  echo "${groupId}"
+}
+
+function launch_ec2_host() {
+  local subnetId=$(get_current_subnet_id)
+  local vpcId=$(get_vpc_id)
+  local newSecurityGroupId=$(create_security_group)
+  echo "--- :ec2: Launching Windows EC2 Instance for Windows Docker Container Support (${vpcId}, ${subnetId})"
+  aws ec2 run-instances \
+    --image-id "${AP_SOUTHEAST2_AMI}" \
+    --count 1 \
+    --instance-type "${HOST_INSTANCE_TYPE}" \
+    --security-group-ids "${newSecurityGroupId}" \
+    --subnet-id "${subnetId}"
+}
+
