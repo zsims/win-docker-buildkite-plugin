@@ -12,6 +12,10 @@ function get_local_ipv4() {
   curl -s 'http://169.254.169.254/latest/meta-data/local-ipv4'
 }
 
+function get_region() {
+  curl -s 'http://169.254.169.254/latest/dynamic/instance-identity/document' | awk -F\" '/region/ {print $4}'
+}
+
 function get_mac_address() {
   curl -s 'http://169.254.169.254/latest/meta-data/mac'
 }
@@ -34,10 +38,12 @@ function create_security_group() {
   local vpcId="$0"
   local currentIp="$1"
   local instanceId=$(get_instance_id)
+  local region=$(get_region)
   local groupId=(aws ec2 create-security-group \
     --group-name "wdbp-${instanceId}" \
     --description 'Created by Win Docker Buildkite Plugin' \
     --vpc-id "${vpcId}" \
+    --region "${region}" \
     --output text \
     --query 'GroupId')
 
@@ -45,6 +51,7 @@ function create_security_group() {
   aws ec2 authorize-security-group-ingress \
     --group-id "${groupId}" \
     --protocol tcp \
+    --region "${region}" \
     --port 2375 \
     --cidr "$currentIp/32" > /dev/null
 
@@ -52,15 +59,18 @@ function create_security_group() {
 }
 
 function launch_ec2_host() {
+  local region=$(get_region)
   local subnetId=$(get_current_subnet_id)
   local vpcId=$(get_vpc_id)
-  local newSecurityGroupId=$(create_security_group)
+  local localIpv4=$(get_local_ipv4)
+  local newSecurityGroupId=$(create_security_group "${vpcId}" "${localIpV4}")
   echo "--- :ec2: Launching Windows EC2 Instance for Windows Docker Container Support (${vpcId}, ${subnetId})"
   aws ec2 run-instances \
     --image-id "${AP_SOUTHEAST2_AMI}" \
     --count 1 \
     --instance-type "${HOST_INSTANCE_TYPE}" \
     --security-group-ids "${newSecurityGroupId}" \
+    --region "${region}" \
     --subnet-id "${subnetId}"
 }
 
