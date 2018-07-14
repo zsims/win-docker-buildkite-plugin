@@ -77,7 +77,7 @@ function get_instance_ip() {
   local region=$(get_region)
   aws ec2 describe-network-interfaces \
     --filter "Name=attachment.instance-id,Values=${instanceId}" \
-    --region "${region}"
+    --region "${region}" \
     --output text \
     --query 'NetworkInterfaces[0].PrivateIpAddress'
 }
