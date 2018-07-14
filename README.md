@@ -38,7 +38,7 @@ steps:
 
 This plugin will also work with the [Buildkite Docker Plugin](https://github.com/buildkite-plugins/docker-buildkite-plugin):
 
-```
+```yml
 steps:
   - command: 'echo %GREETING% from Windows'
     plugins:
@@ -49,8 +49,7 @@ steps:
         image: 'microsoft/nanoserver:latest'
         environment:
           - GREETING=Hello
-``
-
+```
 
 # Tests
 
