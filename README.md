@@ -4,6 +4,12 @@ A [Buildkite plugin](https://buildkite.com/docs/agent/v3/plugins) to easily work
 
 This currently only supports builds running within the [Elastic CI Stack for AWS](https://github.com/buildkite/elastic-ci-stack-for-aws).
 
+## TODO Before this is functional
+
+ - [ ] Wait for the docker port to be exposed when launching
+ - [ ] "Switch" to the remote docker daemon with `unset DOCKER_TLS_VERIFY && export DOCKER_HOST='tcp://<new IP>:2375'`
+ - [ ] Self-destruct/cleanup of resources
+
 ## Why?
 
  1. [Docker Machine](https://docs.docker.com/machine/) has poor support for running Windows Containers; and
