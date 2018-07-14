@@ -35,11 +35,11 @@ function get_instance_id() {
 }
 
 function create_security_group() {
-  local vpcId="$0"
-  local currentIp="$1"
+  local vpcId="$1"
+  local currentIp="$2"
   local instanceId=$(get_instance_id)
   local region=$(get_region)
-  local groupId=(aws ec2 create-security-group \
+  local groupId=$(aws ec2 create-security-group \
     --group-name "wdbp-${instanceId}" \
     --description 'Created by Win Docker Buildkite Plugin' \
     --vpc-id "${vpcId}" \
@@ -63,7 +63,7 @@ function launch_ec2_host() {
   local subnetId=$(get_current_subnet_id)
   local vpcId=$(get_vpc_id)
   local localIpv4=$(get_local_ipv4)
-  local newSecurityGroupId=$(create_security_group "${vpcId}" "${localIpV4}")
+  local newSecurityGroupId=$(create_security_group "${vpcId}" "${localIpv4}")
   echo "--- :ec2: Launching Windows EC2 Instance for Windows Docker Container Support (${vpcId}, ${subnetId})"
   aws ec2 run-instances \
     --image-id "${AP_SOUTHEAST2_AMI}" \
