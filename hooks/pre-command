@@ -26,11 +26,16 @@ function get_vpc_id() {
   curl -s "http://169.254.169.254/latest/meta-data/network/interfaces/macs/${macAddress}/vpc-id"
 }
 
+function get_instance_id() {
+  curl -s 'http://169.254.169.254/latest/meta-data/instance-id'
+}
+
 function create_security_group() {
   local vpcId="$0"
   local currentIp="$1"
+  local instanceId=$(get_instance_id)
   local groupId=(aws ec2 create-security-group \
-    --group-name "TODO" \
+    --group-name "wdbp-${instanceId}" \
     --description 'Created by Win Docker Buildkite Plugin' \
     --vpc-id "${vpcId}" \
     --output text \
