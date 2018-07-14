@@ -60,14 +60,14 @@ function create_security_group() {
 
 function get_windows_userdata() {
   # Allow connection to the daemon per https://docs.microsoft.com/en-us/virtualization/windowscontainers/manage-docker/configure-docker-daemon
-cat <<EOF | base64
+cat <<EOF
 <powershell>
 \$daemonConfig = @'
 {
   "hosts": ["tcp://0.0.0.0:2375", "npipe://"]
 }
 '@
-\$daemonConfig | Out-File 'C:\ProgramData\Docker\config\daemon.json'
+\$daemonConfig | Out-File 'C:\ProgramData\Docker\config\daemon.json' -Encoding ASCII
 & netsh advfirewall firewall add rule name="Docker" dir=in action=allow protocol=TCP localport=2375
 Restart-Service docker
 </powershell>
@@ -80,14 +80,14 @@ function launch_ec2_host() {
   local vpcId=$(get_vpc_id)
   local localIpv4=$(get_local_ipv4)
   local newSecurityGroupId=$(create_security_group "${vpcId}" "${localIpv4}")
-  local userdata=$(get_windows_userdata)
+  local userData=$(get_windows_userdata)
   echo "--- :ec2: Launching Windows EC2 Instance for Windows Docker Container Support (${vpcId}, ${subnetId})"
   aws ec2 run-instances \
     --image-id "${AP_SOUTHEAST2_AMI}" \
     --count 1 \
     --instance-type "${HOST_INSTANCE_TYPE}" \
     --security-group-ids "${newSecurityGroupId}" \
-    --user-data "${userdata}" \
+    --user-data "${userData}" \
     --region "${region}" \
     --subnet-id "${subnetId}"
 }
