@@ -1,6 +1,6 @@
 # Win Docker Buildkite Plugin
 
-A [Buildkite plugin](https://buildkite.com/docs/agent/v3/plugins) to easily work with [Windows Docker Containers](https://docs.microsoft.com/en-us/virtualization/windowscontainers/about/).
+A [Buildkite plugin](https://buildkite.com/docs/agent/v3/plugins) to easily work with [Windows Docker Containers](https://docs.microsoft.com/en-us/virtualization/windowscontainers/about/) from a Linux agent instance.
 
 This currently only supports builds running within AWS Linux EC2 instances, e.g. the [Elastic CI Stack for AWS](https://github.com/buildkite/elastic-ci-stack-for-aws).
 
