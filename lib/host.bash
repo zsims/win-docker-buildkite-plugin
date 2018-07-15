@@ -45,8 +45,8 @@ function ensure_security_group() {
   local groupName="$2"
   local region=$(get_region)
   local existingSecurityGroupId=$(aws ec2 describe-security-groups \
-    --group-names "${groupName}" \
     --filters "Name=vpc-id,Values=${vpcId}" \
+      "Name=group-name,Values=${groupName}" \
     --region "${region}" \
     --output text \
     --query 'SecurityGroups[0].GroupId')
