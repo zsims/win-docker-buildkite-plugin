@@ -7,7 +7,7 @@ AP_SOUTHEAST2_AMI='ami-a4f22dc6'
 function wait_for_it() {
   local host="$1"
   local port="$2"
-  local script="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)/lib/wait-for-it.sh"
+  local script="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)/wait-for-it.sh"
   "$script" "--host=${host}" --port="${port}" --strict --timeout=300
 }
 
