@@ -24,6 +24,29 @@ This plugin (currently) works by:
 
 Launching a Windows EC2 instance per Buildkite EC2 instance allows security to be locked down, and the auto-scaling nature of Elastic CI to be fully utilised.
 
+```
+ AWS EC2                                        AWS EC2
+ Amazon Linux 2 (Buildkite AMI)                 Windows Server 2016 w/Containers
++-----------------------------+                 +---------------------------+
+| +-------------------------+ |  <<create/use>> | +-----------------------+ |
+| |    Your cloned source   +---------------------> Your Windows Container| |
+| | code (pipeline.yml, ..) | |                 | +-----------------------+ |
+| +-------------+-----------+ |                 | +-----------------------+ |
+|               |             |                 | | Windows Container #2  | |
+| +-------------+-----------+ |  <<launch>>     | +-----------------------+ |
+| |    Win Docker Plugin    +---------------------                          |
+| +----+--------------------+ |                 | +-----------------------+ |
+|      |                      |                 | |     Docker Daemon     | |
+| +----v--------------------+ |  TCP :2375      | +-----------^-----------+ |
+| |      Docker Client      +---------------------------------+             |
+| +-------------------------+ |                 |                           |
+|                             |                 |                           |
+| +-------------------------+ |   ping          | +-----------------------+ |
+| |      Buildkite Agent    | <-------------------+  Scheduled Shutdown   | |
+| +-------------------------+ |                 | +-----------------------+ |
++-----------------------------+                 +---------------------------+
+```
+
 # Example
 
 ```yml
