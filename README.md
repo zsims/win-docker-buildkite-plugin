@@ -18,8 +18,8 @@ This currently only supports builds running within AWS Linux EC2 instances, e.g.
 This plugin (currently) works by:
 
  1. Launching an official Amazon AMI of [Microsoft Windows Server 2016 Core with Containers](https://aws.amazon.com/marketplace/pp/B06XX3NFQF)
-   1. The same subnet of the current Elastic CI Stack agent instance will be used
-   2. Exposing the (HTTP) Docker daemon port to the Elastic CI Stack agent instance (port 2375)
+    1. The same subnet of the current Elastic CI Stack agent instance will be used
+    2. Exposing the (HTTP) Docker daemon port to the Elastic CI Stack agent instance (port 2375)
  2. Configuring the Docker client on the Linux agent to point to the Windows Docker Daemon (a supported use-case of Docker)
 
 Launching a Windows EC2 instance per Buildkite EC2 instance allows security to be locked down, and the auto-scaling nature of Elastic CI to be fully utilised.
