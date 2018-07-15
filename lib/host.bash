@@ -32,6 +32,16 @@ function get_instance_id() {
   curl -s 'http://169.254.169.254/latest/meta-data/instance-id'
 }
 
+function get_instance_ip() {
+  local instanceId="$1"
+  local region=$(get_region)
+  aws ec2 describe-network-interfaces \
+    --filter "Name=attachment.instance-id,Values=${instanceId}" \
+    --region "${region}" \
+    --output text \
+    --query 'NetworkInterfaces[0].PrivateIpAddress'
+}
+
 function ensure_security_group() {
   local vpcId="$1"
   local groupName="$2"
@@ -178,16 +188,6 @@ Register-ScheduledTask -Action \$action -Trigger \$trigger -TaskName "Seppuku" -
 EOF
 }
 
-function get_instance_ip() {
-  local instanceId="$1"
-  local region=$(get_region)
-  aws ec2 describe-network-interfaces \
-    --filter "Name=attachment.instance-id,Values=${instanceId}" \
-    --region "${region}" \
-    --output text \
-    --query 'NetworkInterfaces[0].PrivateIpAddress'
-}
-
 function launch_ec2_host() {
   local instanceType="$1"
   local region=$(get_region)
@@ -222,6 +222,60 @@ function launch_ec2_host() {
     --region "${region}"
   local instanceIp=$(get_instance_ip "${instanceId}")
   echo "--- :ec2: Windows EC2 Instance ${instanceId} running at ${instanceIp}"
+
+  export WIN_DOCKER_HOST_INSTANCE_ID="${instanceId}"
+  export WIN_DOCKER_HOST_IP="${instanceIp}"
 }
 
-launch_ec2_host 't2.medium'
+# Returns 0 if the instance is usable (e.g. docker responding)
+function is_instance_usable() {
+  local instanceId="$1"
+  local region=$(get_region)
+
+  local instanceStatus=$(aws ec2 describe-instance-status \
+    --instance-ids "${instanceId}" \
+    --region "${region}" \
+    --output text \
+    --query 'InstanceStatuses[0].InstanceState.Name')
+
+  # Instance does not exist
+  if [[ "${instanceStatus}" == 'None' ]]; then
+    echo "--- :ec2: Instance ${instanceId} does not exist"
+    return 1
+  fi
+
+  if [[ "${instanceStatus}" == 'pending' ]]; then
+    echo "--- :ec2: Instance pending, waiting for it to move into running state"
+    aws ec2 wait instance-running --instance-ids "${instanceId}" --region "${region}"
+  fi
+
+  if [[ "${instanceStatus}" == 'running' ]]; then
+    # TODO: check docker is responding
+    echo "--- :ec2: Found running instance (${instanceId})"
+    return 0
+  fi
+
+  return 2
+}
+
+function ensure_windows_ec2_host() {
+  local instanceType="$1"
+  local vpcId=$(get_vpc_id)
+  local statusFile="$HOME/win-docker-instance"
+
+  # check if there's already a running instance
+  echo "--- :ec2: Checking for existing Windows EC2 Docker Host"
+  if [[ -f "$statusFile" ]]; then
+    local existingInstanceId=$(cat "${statusFile}") 
+    if is_instance_usable "${existingInstanceId}"; then
+      # all good
+      export WIN_DOCKER_HOST_IP=$(get_instance_ip "${existingInstanceId}")
+      export WIN_DOCKER_HOST_INSTANCE_ID="${existingInstanceId}"
+      return
+    fi
+  fi
+
+  # no host healthy, launch it
+  launch_ec2_host "${instanceType}"
+  echo "${WIN_DOCKER_HOST_INSTANCE_ID}" > "${statusFile}"
+}
