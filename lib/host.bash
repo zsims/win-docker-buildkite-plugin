@@ -4,6 +4,13 @@
 # TODO: Search for this automatically
 AP_SOUTHEAST2_AMI='ami-a4f22dc6'
 
+function wait_for_it() {
+  local host="$1"
+  local port="$2"
+  local script="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)/lib/wait-for-it.sh"
+  "$script" "--host=${host}" --port="${port}" --strict --timeout=300
+}
+
 function get_local_ipv4() {
   curl -s 'http://169.254.169.254/latest/meta-data/local-ipv4'
 }
@@ -223,6 +230,12 @@ function launch_ec2_host() {
     --region "${region}"
   local instanceIp=$(get_instance_ip "${instanceId}")
   echo "--- :ec2: Windows EC2 Instance ${instanceId} running at ${instanceIp}"
+  
+  echo "--- :docker: Waiting for Windows docker daemon to respond"
+  if ! wait_for_it "${instanceIp}" '2375'; then
+    echo "--- :x: Docker daemon didn't respond, there may be a problem with the Windows instance"
+    exit 1
+  fi
 
   export WIN_DOCKER_HOST_INSTANCE_ID="${instanceId}"
   export WIN_DOCKER_HOST_IP="${instanceIp}"
