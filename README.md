@@ -8,7 +8,6 @@ This currently only supports builds running within the [Elastic CI Stack for AWS
 
  - [ ] Wait for the docker port to be exposed when launching
  - [ ] "Switch" to the remote docker daemon with `unset DOCKER_TLS_VERIFY && export DOCKER_HOST='tcp://<new IP>:2375'`
- - [ ] Self-destruct/cleanup of resources
 
 ## Why?
 
@@ -36,8 +35,7 @@ steps:
     command: 'docker run microsoft/dotnet-samples:dotnetapp-nanoserver'
     plugins:
       zsims/win-docker#0.0.1:
-        host:
-          aws_instance_type: 't2.medium'
+        aws_instance_type: 't2.medium'
 ```
 
 ## Example with Buildkite Docker Plugin
@@ -49,8 +47,7 @@ steps:
   - command: 'echo %GREETING% from Windows'
     plugins:
       zsims/win-docker#0.0.1:
-        host:
-          aws_instance_type: 't2.medium'
+        aws_instance_type: 't2.medium'
       docker#v1.4.0:
         image: 'microsoft/nanoserver:latest'
         environment:

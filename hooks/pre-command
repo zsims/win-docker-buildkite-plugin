@@ -6,7 +6,13 @@ DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
 
 . "$DIR/../lib/host.bash"
 
-HOST_INSTANCE_TYPE="${BUILDKITE_PLUGIN_WIN_DOCKER_HOST_AWS_INSTANCE_TYPE:-t2.medium}"
+HOST_INSTANCE_TYPE="${BUILDKITE_PLUGIN_WIN_DOCKER_AWS_INSTANCE_TYPE:-t2.medium}"
+ensure_windows_ec2_host "${HOST_INSTANCE_TYPE}"
 
-launch_ec2_host "${HOST_INSTANCE_TYPE}"
+# activate
+export WIN_DOCKER_ORIGINAL_HOST="${DOCKER_HOST:-}"
+export WIN_DOCKER_ORIGINAL_TLS_VERIFY="${DOCKER_TLS_VERIFY:-off}"
 
+export DOCKER_HOST="tcp://${WIN_DOCKER_HOST_IP}:${WIN_DOCKER_HOST_PORT}"
+echo "--- :docker: Switching Docker Daemon host to ${DOCKER_HOST}"
+unset DOCKER_TLS_VERIFY

@@ -4,8 +4,7 @@ author: https://github.com/zsims
 requirements: []
 configuration:
   properties:
-    host:
-      aws_instance_type:
-        type: string
+    aws_instance_type:
+      type: string
   required:
     - host

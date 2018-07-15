@@ -1,6 +1,4 @@
-#!/usr/bin/env bash
-
-set -euo pipefail
+#!/bin/bash
 
 # AMI for Windows Server 2016 Containers: https://aws.amazon.com/marketplace/pp/B06XX3NFQF
 # TODO: Search for this automatically
@@ -75,7 +73,7 @@ function ensure_agent_security_group() {
   ensure_security_group "${vpcId}" "${groupName}"
 }
 
-# Ensures that the agent security group can get pings from 
+# Ensures that the agent security group can get pings from
 function ensure_agent_security_group_allows_ping() {
   local agentSecurityGroupId="$1"
   local windowsHostSecurityGroupId="$2"
@@ -263,10 +261,12 @@ function ensure_windows_ec2_host() {
   local vpcId=$(get_vpc_id)
   local statusFile="$HOME/win-docker-instance"
 
+  export WIN_DOCKER_HOST_PORT='2375'
+
   # check if there's already a running instance
   echo "--- :ec2: Checking for existing Windows EC2 Docker Host"
   if [[ -f "$statusFile" ]]; then
-    local existingInstanceId=$(cat "${statusFile}") 
+    local existingInstanceId=$(cat "${statusFile}")
     if is_instance_usable "${existingInstanceId}"; then
       # all good
       export WIN_DOCKER_HOST_IP=$(get_instance_ip "${existingInstanceId}")
