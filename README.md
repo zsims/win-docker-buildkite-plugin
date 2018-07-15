@@ -54,7 +54,7 @@ steps:
   - label: 'Run a Windows Docker container'
     command: 'docker run microsoft/dotnet-samples:dotnetapp-nanoserver'
     plugins:
-      zsims/win-docker#v0.0.4:
+      zsims/win-docker#v0.0.5:
         aws_instance_type: 't2.medium'
 ```
 
@@ -68,7 +68,7 @@ Some of the defaults must be overriden (`mount-buildkite-agent`, and `workdir`) 
 steps:
   - command: 'echo %GREETING% from Windows'
     plugins:
-      zsims/win-docker#v0.0.4:
+      zsims/win-docker#v0.0.5:
         aws_instance_type: 't2.medium'
       docker#v1.4.0:
         image: 'microsoft/nanoserver:latest'
