@@ -168,11 +168,11 @@ if(!(Test-Connection -ComputerName '${thisIpv4}' -Count 3 -Delay 10 -Quiet)) {
   Stop-Computer -Force
 }
 '@
-\$seppukuScript | Out-File 'C:\seppuku.ps1' -Encoding ASCII
+\$seppukuScript -Replace "\`n", "\`r\`n" | Out-File 'C:\seppuku.ps1' -Encoding ASCII
 
 # Setup Scheduled task to shutdown when IP no longer responds to pings
 \$action = New-ScheduledTaskAction -Execute 'Powershell.exe' -Argument '-NoProfile -File "C:\seppuku.ps1"'
-\$trigger = New-ScheduledTaskTrigger -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 1) -RepetitionDuration ([timespan]::MaxValue)
+\$trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 1) -RepetitionDuration ([timespan]::MaxValue)
 Register-ScheduledTask -Action \$action -Trigger \$trigger -TaskName "Seppuku" -Description "Shutdown if ping lost"
 </powershell>
 EOF
