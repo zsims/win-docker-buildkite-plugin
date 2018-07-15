@@ -29,7 +29,7 @@ steps:
   - label: 'Run a Windows Docker container'
     command: 'docker run microsoft/dotnet-samples:dotnetapp-nanoserver'
     plugins:
-      zsims/win-docker#v0.0.1:
+      zsims/win-docker#v0.0.4:
         aws_instance_type: 't2.medium'
 ```
 
@@ -41,7 +41,7 @@ This plugin will also work with the [Buildkite Docker Plugin](https://github.com
 steps:
   - command: 'echo %GREETING% from Windows'
     plugins:
-      zsims/win-docker#v0.0.1:
+      zsims/win-docker#v0.0.4:
         aws_instance_type: 't2.medium'
       docker#v1.4.0:
         image: 'microsoft/nanoserver:latest'
