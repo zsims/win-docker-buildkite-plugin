@@ -58,9 +58,11 @@ steps:
         aws_instance_type: 't2.medium'
 ```
 
-## Example with Buildkite Docker Plugin
+## Example with Buildkite Docker Plugin (TBD)
 
-This plugin will also work with the [Buildkite Docker Plugin](https://github.com/buildkite-plugins/docker-buildkite-plugin):
+This plugin will **soon** work with the [Buildkite Docker Plugin](https://github.com/buildkite-plugins/docker-buildkite-plugin):
+
+ - [ ] Support "copying" data to the Windows host to allow mounting
 
 Some of the defaults must be overriden (`mount-buildkite-agent`, and `workdir`) as they assume the target container is Linux:
 
