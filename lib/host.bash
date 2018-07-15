@@ -65,6 +65,32 @@ function ensure_agent_security_group() {
   ensure_security_group "${vpcId}" "${groupName}"
 }
 
+# Ensures that the agent security group can get pings from 
+function ensure_agent_security_group_allows_ping() {
+  local agentSecurityGroupId="$1"
+  local windowsHostSecurityGroupId="$2"
+  local region=$(get_region)
+
+  # Ensure the agent can get ICMP pings from the windows host
+  local existingSecurityIngress=$(aws ec2 describe-security-groups \
+    --group-ids "${agentSecurityGroupId}" \
+    --filters "Name=ip-permission.group-id,Values=${windowsHostSecurityGroupId}" \
+      "Name=ip-permission.protocol,Values=icmp" \
+    --region "${region}" \
+    --output text \
+    --query 'SecurityGroups[0].GroupId')
+
+  # no ingress rule, create one
+  if [[ "${existingSecurityIngress}" == 'None' ]]; then
+    aws ec2 authorize-security-group-ingress \
+      --group-id "${agentSecurityGroupId}" \
+      --protocol icmp \
+      --region "${region}" \
+      --port '-1' \
+      --source-group "${windowsHostSecurityGroupId}" > /dev/null
+  fi
+}
+
 # Ensures the windows host security group exists and returns its id
 function ensure_windows_host_security_group() {
   local vpcId="$1"
@@ -121,6 +147,9 @@ function ensure_security_group_attached() {
 
 function get_windows_userdata() {
   # Allow connection to the daemon per https://docs.microsoft.com/en-us/virtualization/windowscontainers/manage-docker/configure-docker-daemon
+
+  # And shutdown if the agent instance no longer responds to pings
+  local thisIpv4=$(get_local_ipv4)
 cat <<EOF
 <powershell>
 \$daemonConfig = @'
@@ -131,6 +160,20 @@ cat <<EOF
 \$daemonConfig | Out-File 'C:\ProgramData\Docker\config\daemon.json' -Encoding ASCII
 & netsh advfirewall firewall add rule name="Docker" dir=in action=allow protocol=TCP localport=2375
 Restart-Service docker
+
+# Script to Send 3 pings, with a 10s delay between each one -- if its down for 30s then shutdown
+\$seppukuScript = @'
+# Returns true if any of the pings are successful
+if(!(Test-Connection -ComputerName '${thisIpv4}' -Count 3 -Delay 10 -Quiet)) {
+  Stop-Computer -Force
+}
+'@
+\$seppukuConfig | Out-File 'C:\seppuku.ps1' -Encoding ASCII
+
+# Setup Scheduled task to shutdown when IP no longer responds to pings
+\$action = New-ScheduledTaskAction -Execute 'Powershell.exe' -Argument '-NoProfile -File "C:\seppuku.ps1"'
+\$trigger = New-ScheduledTaskTrigger -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 1) -RepetitionDuration ([timespan]::MaxValue)
+Register-ScheduledTask -Action \$action -Trigger \$trigger -TaskName "Seppuku" -Description "Shutdown if ping lost"
 </powershell>
 EOF
 }
@@ -148,12 +191,15 @@ function get_instance_ip() {
 function launch_ec2_host() {
   local instanceType="$1"
   local region=$(get_region)
-  local subnetId=$(get_current_subnet_id)
   local vpcId=$(get_vpc_id)
-  local localIpv4=$(get_local_ipv4)
+
+  # Setup once off security groups
   local agentSecurityGroupId=$(ensure_agent_security_group "${vpcId}")
   local windowsHostSecurityGroupId=$(ensure_windows_host_security_group "${vpcId}" "${agentSecurityGroupId}")
+  ensure_agent_security_group_allows_ping "${agentSecurityGroupId}" "${windowsHostSecurityGroupId}"
+
   local userData=$(get_windows_userdata)
+  local subnetId=$(get_current_subnet_id)
   local instanceId=$(aws ec2 run-instances \
     --image-id "${AP_SOUTHEAST2_AMI}" \
     --count 1 \
@@ -177,3 +223,5 @@ function launch_ec2_host() {
   local instanceIp=$(get_instance_ip "${instanceId}")
   echo "--- :ec2: Windows EC2 Instance ${instanceId} running at ${instanceIp}"
 }
+
+launch_ec2_host 't2.medium'
