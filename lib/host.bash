@@ -75,8 +75,9 @@ function ensure_agent_security_group() {
 
 # Ensures that the agent security group can get pings from
 function ensure_agent_security_group_allows_ping() {
-  local agentSecurityGroupId="$1"
-  local windowsHostSecurityGroupId="$2"
+  local vpcId="$1"
+  local agentSecurityGroupId="$2"
+  local windowsHostSecurityGroupId="$3"
   local region=$(get_region)
 
   # Ensure the agent can get ICMP pings from the windows host
@@ -84,6 +85,7 @@ function ensure_agent_security_group_allows_ping() {
     --group-ids "${agentSecurityGroupId}" \
     --filters "Name=ip-permission.group-id,Values=${windowsHostSecurityGroupId}" \
       "Name=ip-permission.protocol,Values=icmp" \
+      "Name=vpc-id,Values=${vpcId}" \
     --region "${region}" \
     --output text \
     --query 'SecurityGroups[0].GroupId')
@@ -111,6 +113,7 @@ function ensure_windows_host_security_group() {
   local existingSecurityIngress=$(aws ec2 describe-security-groups \
     --group-ids "${groupId}" \
     --filters "Name=ip-permission.group-id,Values=${agentSecurityGroupId}" \
+      "Name=vpc-id,Values=${vpcId}" \
     --region "${region}" \
     --output text \
     --query 'SecurityGroups[0].GroupId')
@@ -194,7 +197,7 @@ function launch_ec2_host() {
   # Setup once off security groups
   local agentSecurityGroupId=$(ensure_agent_security_group "${vpcId}")
   local windowsHostSecurityGroupId=$(ensure_windows_host_security_group "${vpcId}" "${agentSecurityGroupId}")
-  ensure_agent_security_group_allows_ping "${agentSecurityGroupId}" "${windowsHostSecurityGroupId}"
+  ensure_agent_security_group_allows_ping "${vpcId}" "${agentSecurityGroupId}" "${windowsHostSecurityGroupId}"
 
   local userData=$(get_windows_userdata)
   local subnetId=$(get_current_subnet_id)
