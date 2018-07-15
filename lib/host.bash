@@ -168,7 +168,7 @@ if(!(Test-Connection -ComputerName '${thisIpv4}' -Count 3 -Delay 10 -Quiet)) {
   Stop-Computer -Force
 }
 '@
-\$seppukuConfig | Out-File 'C:\seppuku.ps1' -Encoding ASCII
+\$seppukuScript | Out-File 'C:\seppuku.ps1' -Encoding ASCII
 
 # Setup Scheduled task to shutdown when IP no longer responds to pings
 \$action = New-ScheduledTaskAction -Execute 'Powershell.exe' -Argument '-NoProfile -File "C:\seppuku.ps1"'
