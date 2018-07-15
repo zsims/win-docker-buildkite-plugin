@@ -62,6 +62,8 @@ steps:
 
 This plugin will also work with the [Buildkite Docker Plugin](https://github.com/buildkite-plugins/docker-buildkite-plugin):
 
+Some of the defaults must be overriden (`mount-buildkite-agent`, and `workdir`) as they assume the target container is Linux:
+
 ```yml
 steps:
   - command: 'echo %GREETING% from Windows'
@@ -70,6 +72,9 @@ steps:
         aws_instance_type: 't2.medium'
       docker#v1.4.0:
         image: 'microsoft/nanoserver:latest'
+        workdir: 'C:/workdir'
+        mount-buildkite-agent: false
+        shell: 'cmd /c'
         environment:
           - GREETING=Hello
 ```
