@@ -7,7 +7,7 @@ This currently only supports builds running within AWS Linux EC2 instances, e.g.
 ## Why?
 
  1. [Docker Machine](https://docs.docker.com/machine/) has poor support for running Windows Containers; and
- 2. Buildkite has amazing support for Linux, but it relies somewhat heavily on Bash (hooks, plugins, etc) so pure Windows agents would lose some functionality; and
+ 2. Buildkite has amazing support for Linux, but it relies somewhat heavily on Bash (hooks, plugins, etc) so pure Windows agents would lose some functionality (see https://github.com/buildkite/elastic-ci-stack-for-aws/issues/286); and
  3. Allow an easy way to run steps with-in Windows (via Windows Docker containers); and
  4. Docker Machine is being replaced by Docker Cloud; and
  5. Allow Windows code-bases to easily migrate steps to Linux (with the agent pool); and
