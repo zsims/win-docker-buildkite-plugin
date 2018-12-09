@@ -1,4 +1,4 @@
-name: win-docker
+name: Win Docker
 description: Provides a way for working with Windows Docker containers from a Linux Host. Designed to work with the Elastic CI stack
 author: https://github.com/zsims
 requirements: []
